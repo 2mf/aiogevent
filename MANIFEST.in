@@ -1,0 +1,4 @@
+include COPYING
+include Makefile
+include runtests.py
+include tox.ini

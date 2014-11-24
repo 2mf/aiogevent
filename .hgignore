@@ -1,0 +1,17 @@
+.*\.py[co]$
+.*~$
+.*\.orig$
+.*\#.*$
+.*@.*$
+\.coverage$
+htmlcov$
+\.DS_Store$
+venv$
+distribute_setup.py$
+distribute-\d+.\d+.\d+.tar.gz$
+build$
+dist$
+.*\.egg-info$
+
+# Directory created by the "tox" command (ex: tox -e py27)
+.tox
