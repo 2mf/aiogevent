@@ -119,8 +119,6 @@ def load_modules(basedir, suffix='.py'):
     for modname, sourcefile in list_dir('', basedir):
         if modname == 'runtests':
             continue
-        if 'network' in modname:
-            continue
         try:
             mod = load_module(modname, sourcefile)
             mods.append((mod, sourcefile))

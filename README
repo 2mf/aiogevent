@@ -21,6 +21,7 @@ TODO:
 * support gevent monkey patching
 * enable py33 environments in tox.ini: gevent 1.0.1 does not support Python 3,
   need a new release. Tests pass on the development (git) version of gevent.
+* fix test_network.py
 
 The development version of gevent has an experimental support of Python 3.
 See the `gevent issue #38: python3
