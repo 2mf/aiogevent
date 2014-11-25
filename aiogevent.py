@@ -167,6 +167,10 @@ class EventLoop(asyncio.SelectorEventLoop):
         selector = _Selector(self)
         super(EventLoop, self).__init__(selector=selector)
 
+    if GEVENT10:
+        def time(self):
+            return gevent.core.time()
+
     def call_soon(self, callback, *args):
         handle = super(EventLoop, self).call_soon(callback, *args)
         if self._selector is not None and self._selector._event:
