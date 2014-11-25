@@ -3,7 +3,7 @@ possible to write asyncio code in a project currently written for gevent.
 
 aiogevent allows to use greenlets in asyncio coroutines, and to use asyncio
 coroutines, tasks and futures in greenlets: see ``link_future()`` and
-``wrap_greenthread()`` functions.
+``wrap_greenlet()`` functions.
 
 The main visible difference between aiogevent and trollius is the behaviour of
 ``run_forever()``: ``run_forever()`` blocks with trollius, whereas it runs in a
@@ -15,8 +15,148 @@ greenlet while the Python main thread runs other greenlets in parallel.
 
 See also the `aiogreen project <http://aiogreen.readthedocs.org/>`_.
 
-TODO:
 
+Hello World
+===========
+
+Code::
+
+    import aiogevent
+    import trollius as asyncio
+
+    def hello_world():
+        print("Hello World")
+        loop.stop()
+
+    asyncio.set_event_loop_policy(aiogevent.EventLoopPolicy())
+    loop = asyncio.get_event_loop()
+    loop.call_soon(hello_world)
+    loop.run_forever()
+    loop.close()
+
+
+
+API
+===
+
+aiogevent specific functions:
+
+.. warning::
+   aiogevent API is not considered as stable yet.
+
+link_future
+-----------
+
+.. function:: link_future(future, loop=None)
+
+   Wait for a future, a task, or a coroutine object from a greenlet.
+
+   Return the result or raise the exception of the future.
+
+   The function must not be called from the greenlet of the aiogevent event
+   loop.
+
+   Example of greenlet waiting for a trollius task. The ``progress()``
+   callback is called regulary to see that the event loop in not blocked::
+
+        import aiogevent
+        import gevent
+        import trollius as asyncio
+        from trollius import From, Return
+
+        def progress():
+            print("computation in progress...")
+            loop.call_later(0.5, progress)
+
+        @asyncio.coroutine
+        def coro_slow_sum(x, y):
+            yield From(asyncio.sleep(1.0))
+            raise Return(x + y)
+
+        def green_sum():
+            loop.call_soon(progress)
+
+            task = asyncio.async(coro_slow_sum(1, 2))
+
+            value = aiogevent.link_future(task)
+            print("1 + 2 = %s" % value)
+
+            loop.stop()
+
+        asyncio.set_event_loop_policy(aiogevent.EventLoopPolicy())
+        gevent.spawn(green_sum)
+        loop = asyncio.get_event_loop()
+        loop.run_forever()
+        loop.close()
+
+   Output::
+
+        computation in progress...
+        computation in progress...
+        computation in progress...
+        1 + 2 = 3
+
+wrap_greenlet
+-------------
+
+.. function:: wrap_greenlet(gt)
+
+   Wrap a greenlet into a Future object.
+
+   The Future object waits for the completion of a greenlet. The result or
+   the exception of the greenlet will be stored in the Future object.
+
+   Greenlet of greenlet and gevent modules are supported: ``gevent.greenlet``
+   and ``greenlet.greenlet``.
+
+   The greenlet must be wrapped before its execution starts. If the
+   greenlet is running or already finished, an exception is raised.
+
+   The ``run`` attribute of the greenlet must be set.
+
+   Example of trollius coroutine waiting for a greenlet. The ``progress()``
+   callback is called regulary to see that the event loop in not blocked::
+
+        import aiogevent
+        import gevent
+        import trollius as asyncio
+        from trollius import From, Return
+
+        def progress():
+            print("computation in progress...")
+            loop.call_later(0.5, progress)
+
+        def slow_sum(x, y):
+            gevent.sleep(1.0)
+            return x + y
+
+        @asyncio.coroutine
+        def coro_sum():
+            loop.call_soon(progress)
+
+            gt = gevent.spawn(slow_sum, 1, 2)
+            fut = aiogevent.wrap_greenlet(gt, loop=loop)
+
+            result = yield From(fut)
+            print("1 + 2 = %s" % result)
+
+        asyncio.set_event_loop_policy(aiogevent.EventLoopPolicy())
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(coro_sum())
+        loop.close()
+
+   Output::
+
+        computation in progress...
+        computation in progress...
+        computation in progress...
+        1 + 2 = 3
+
+
+To do
+=====
+
+* test link_future()
 * support gevent versions older than 0.13. With version older than 0.13, import gevent
   raise "ImportError: .../python2.7/site-packages/gevent/core.so: undefined
   symbol: current_base"
@@ -24,10 +164,26 @@ TODO:
 * enable py33 environments in tox.ini: gevent 1.0.1 does not support Python 3,
   need a new release. Tests pass on the development (git) version of gevent.
 
+
+gevent and Python 3
+===================
+
 The development version of gevent has an experimental support of Python 3.
 See the `gevent issue #38: python3
 <https://github.com/gevent/gevent/issues/38>`_.
 
+
+Threading
+=========
+
 gevent does not support threads: the aiogevent must run in the main thread,
 and run_in_executor() is not implemented.
 
+
+Changelog
+=========
+
+Version 0.1
+-----------
+
+* First release

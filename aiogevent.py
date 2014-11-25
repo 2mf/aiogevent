@@ -187,97 +187,98 @@ class EventLoop(asyncio.SelectorEventLoop):
             self._write_to_self()
         return handle
 
-    def link_future(self, future):
-        """Wait for a future, a task, or a coroutine object from a greenthread.
-
-        Return the result or raise the exception of the future.
-
-        The function must not be called from the greenthread
-        of the aiogreen event loop.
-        """
-        if self._greenlet == gevent.getcurrent():
-            raise RuntimeError("link_future() must not be called from "
-                               "the greenthread of the aiogreen event loop")
-
-        future = asyncio.async(future, loop=self)
-        event = gevent.event.Event()
-
-        def done(fut):
-            try:
-                result = fut.result()
-            except Exception as exc:
-                event.send_exception(exc)
-            else:
-                event.send(result)
-
-        future.add_done_callback(done)
-        return event.wait()
-
-    def wrap_greenthread(self, gt):
-        """Wrap an a greenlet into a Future object.
-
-        The Future object waits for the completion of a greenthread. The result
-        or the exception of the greenthread will be stored in the Future object.
-
-        The greenthread must be wrapped before its execution starts. If the
-        greenthread is running or already finished, an exception is raised.
-
-        For greenlets, the run attribute must be set.
-        """
-        fut = asyncio.Future(loop=self)
-
-        if not isinstance(gt, greenlet.greenlet):
-            raise TypeError("greenthread or greenlet request, not %s"
-                            % type(gt))
-
-        if gt.dead:
-            raise RuntimeError("wrap_greenthread: the greenthread already finished")
-
-        if isinstance(gt, gevent.Greenlet):
-            # Don't use gevent.Greenlet.__bool__() because since gevent 1.0, a
-            # greenlet is True if it already starts, and gevent.spawn() starts
-            # the greenlet just after its creation.
-            if _PY3:
-                is_running = greenlet.greenlet.__bool__
-            else:
-                is_running = greenlet.greenlet.__nonzero__
-            if is_running(gt):
-                raise RuntimeError("wrap_greenthread: the greenthread is running")
-
-            orig_func = gt._run
-            def wrap_func(*args, **kw):
-                try:
-                    result = orig_func(*args, **kw)
-                except Exception as exc:
-                    fut.set_exception(exc)
-                else:
-                    fut.set_result(result)
-            gt._run = wrap_func
-        else:
-            if gt:
-                raise RuntimeError("wrap_greenthread: the greenthread is running")
-
-            try:
-                orig_func = gt.run
-            except AttributeError:
-                raise RuntimeError("wrap_greenthread: the run attribute "
-                                   "of the greenlet is not set")
-            def wrap_func(*args, **kw):
-                try:
-                    result = orig_func(*args, **kw)
-                except Exception as exc:
-                    fut.set_exception(exc)
-                else:
-                    fut.set_result(result)
-            gt.run = wrap_func
-        return fut
-
     def run_forever(self):
         self._greenlet = gevent.getcurrent()
         try:
             super(EventLoop, self).run_forever()
         finally:
             self._greenlet = None
+
+
+def link_future(future, loop=None):
+    """Wait for a future, a task, or a coroutine object from a greenlet.
+
+    Return the result or raise the exception of the future.
+
+    The function must not be called from the greenlet
+    of the aiogreen event loop.
+    """
+    future = asyncio.async(future, loop=loop)
+    if future._loop._greenlet == gevent.getcurrent():
+        raise RuntimeError("link_future() must not be called from "
+                           "the greenlet of the aiogreen event loop")
+
+    event = gevent.event.Event()
+
+    def wakeup_event(fut):
+        event.set()
+
+    future.add_done_callback(wakeup_event)
+    event.wait()
+    return future.result()
+
+
+def wrap_greenlet(gt, loop=None):
+    """Wrap a greenlet into a Future object.
+
+    The Future object waits for the completion of a greenlet. The result or the
+    exception of the greenlet will be stored in the Future object.
+
+    Greenlet of greenlet and gevent modules are supported: gevent.greenlet
+    and greenlet.greenlet.
+
+    The greenlet must be wrapped before its execution starts. If the greenlet
+    is running or already finished, an exception is raised.
+
+    The run attribute of the greenlet must be set.
+    """
+    fut = asyncio.Future(loop=loop)
+
+    if not isinstance(gt, greenlet.greenlet):
+        raise TypeError("greenlet.greenlet or gevent.greenlet request, not %s"
+                        % type(gt))
+
+    if gt.dead:
+        raise RuntimeError("wrap_greenlet: the greenlet already finished")
+
+    if isinstance(gt, gevent.Greenlet):
+        # Don't use gevent.Greenlet.__bool__() because since gevent 1.0, a
+        # greenlet is True if it already starts, and gevent.spawn() starts
+        # the greenlet just after its creation.
+        if _PY3:
+            is_running = greenlet.greenlet.__bool__
+        else:
+            is_running = greenlet.greenlet.__nonzero__
+        if is_running(gt):
+            raise RuntimeError("wrap_greenlet: the greenlet is running")
+
+        orig_func = gt._run
+        def wrap_func(*args, **kw):
+            try:
+                result = orig_func(*args, **kw)
+            except Exception as exc:
+                fut.set_exception(exc)
+            else:
+                fut.set_result(result)
+        gt._run = wrap_func
+    else:
+        if gt:
+            raise RuntimeError("wrap_greenlet: the greenlet is running")
+
+        try:
+            orig_func = gt.run
+        except AttributeError:
+            raise RuntimeError("wrap_greenlet: the run attribute "
+                               "of the greenlet is not set")
+        def wrap_func(*args, **kw):
+            try:
+                result = orig_func(*args, **kw)
+            except Exception as exc:
+                fut.set_exception(exc)
+            else:
+                fut.set_result(result)
+        gt.run = wrap_func
+    return fut
 
 
 class EventLoopPolicy(asyncio.AbstractEventLoopPolicy):
