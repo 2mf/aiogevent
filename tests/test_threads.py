@@ -1,4 +1,3 @@
-import gevent
 import tests
 import threading
 try:

@@ -2,7 +2,6 @@ import gevent.core
 import gevent.event
 import gevent.hub
 import greenlet
-import logging
 import socket
 import sys
 import threading
@@ -22,14 +21,13 @@ except ImportError:
     else:
         socketpair = socket.socketpair
 
-logger = logging.getLogger('aiogreen')
 _PY3 = sys.version_info >= (3,)
 
 _EVENT_READ = asyncio.selectors.EVENT_READ
 _EVENT_WRITE = asyncio.selectors.EVENT_WRITE
 
 # gevent 1.0 or newer?
-GEVENT10 = hasattr(gevent.hub.get_hub(), 'loop')
+_GEVENT10 = hasattr(gevent.hub.get_hub(), 'loop')
 
 
 class _Selector(asyncio.selectors._BaseSelectorImpl):
@@ -41,7 +39,7 @@ class _Selector(asyncio.selectors._BaseSelectorImpl):
         # gevent.event.Event() used by FD notifiers to wake up select()
         self._event = None
         self._gevent_events = {}
-        if GEVENT10:
+        if _GEVENT10:
             self._gevent_loop = gevent.hub.get_hub().loop
 
 
@@ -92,12 +90,12 @@ class _Selector(asyncio.selectors._BaseSelectorImpl):
         except KeyError:
             pass
         else:
-            if GEVENT10:
+            if _GEVENT10:
                 watcher.stop()
             else:
                 watcher.cancel()
 
-        if GEVENT10:
+        if _GEVENT10:
             if event == _EVENT_READ:
                 def func():
                     self._notify(fd, _EVENT_READ)
@@ -131,7 +129,7 @@ class _Selector(asyncio.selectors._BaseSelectorImpl):
                 watcher = event_dict[event]
             except KeyError:
                 continue
-            if GEVENT10:
+            if _GEVENT10:
                 watcher.stop()
             else:
                 watcher.cancel()
@@ -168,7 +166,7 @@ class EventLoop(asyncio.SelectorEventLoop):
         selector = _Selector(self)
         super(EventLoop, self).__init__(selector=selector)
 
-    if GEVENT10:
+    if _GEVENT10:
         def time(self):
             return gevent.core.time()
 
