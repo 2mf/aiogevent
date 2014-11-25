@@ -17,11 +17,12 @@ See also the `aiogreen project <http://aiogreen.readthedocs.org/>`_.
 
 TODO:
 
-* support gevent versions older than 0.13
+* support gevent versions older than 0.13. With version older than 0.13, import gevent
+  raise "ImportError: .../python2.7/site-packages/gevent/core.so: undefined
+  symbol: current_base"
 * support gevent monkey patching
 * enable py33 environments in tox.ini: gevent 1.0.1 does not support Python 3,
   need a new release. Tests pass on the development (git) version of gevent.
-* fix test_network.py
 
 The development version of gevent has an experimental support of Python 3.
 See the `gevent issue #38: python3

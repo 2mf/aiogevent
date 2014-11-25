@@ -78,35 +78,53 @@ class _Selector(asyncio.selectors._BaseSelectorImpl):
         for fd, events in notified.items():
             key = self.get_key(fd)
             ready.append((key, events & key.events))
+
+            for event in (_EVENT_READ, _EVENT_WRITE):
+                if key.events & event:
+                    self._register(key.fd, event)
         return ready
+
+    def _register(self, fd, event):
+        if fd in self._gevent_events:
+            event_dict = self._gevent_events[fd]
+        else:
+            event_dict = {}
+            self._gevent_events[fd] = event_dict
+
+        try:
+            watcher = event_dict[event]
+        except KeyError:
+            pass
+        else:
+            if GEVENT10:
+                watcher.stop()
+            else:
+                watcher.cancel()
+
+        if GEVENT10:
+            if event == _EVENT_READ:
+                def func():
+                    self._notify(fd, _EVENT_READ)
+                watcher = self._gevent_loop.io(fd, 1)
+                watcher.start(func)
+            else:
+                def func():
+                    self._notify(fd, _EVENT_WRITE)
+                watcher = self._gevent_loop.io(fd, 2)
+                watcher.start(func)
+            event_dict[event] = watcher
+        else:
+            if event == _EVENT_READ:
+                gevent_event = gevent.core.read_event(fd, self._notify_read)
+            else:
+                gevent_event = gevent.core.write_event(fd, self._notify_write)
+            event_dict[event] = gevent_event
 
     def register(self, fileobj, events, data=None):
         key = super(_Selector, self).register(fileobj, events, data)
-        event_dict = {}
         for event in (_EVENT_READ, _EVENT_WRITE):
-            if not(events & event):
-                continue
-
-            if GEVENT10:
-                if event == _EVENT_READ:
-                    def func():
-                        self._notify(key.fd, _EVENT_READ)
-                    watcher = self._gevent_loop.io(key.fd, 1)
-                    watcher.start(func)
-                else:
-                    def func():
-                        self._notify(key.fd, _EVENT_WRITE)
-                    watcher = self._gevent_loop.io(key.fd, 2)
-                    watcher.start(func)
-                event_dict[event] = watcher
-            else:
-                if event == _EVENT_READ:
-                    gevent_event = gevent.core.read_event(key.fd, self._notify_read)
-                else:
-                    gevent_event = gevent.core.write_event(key.fd, self._notify_write)
-                event_dict[event] = gevent_event
-
-        self._gevent_events[key.fd] = event_dict
+            if events & event:
+                self._register(key.fd, event)
         return key
 
     def unregister(self, fileobj):
@@ -114,13 +132,13 @@ class _Selector(asyncio.selectors._BaseSelectorImpl):
         event_dict = self._gevent_events.pop(key.fd, {})
         for event in (_EVENT_READ, _EVENT_WRITE):
             try:
-                gevent_event = event_dict[event]
+                watcher = event_dict[event]
             except KeyError:
                 continue
             if GEVENT10:
-                gevent_event.stop()
+                watcher.stop()
             else:
-                gevent_event.cancel()
+                watcher.cancel()
         return key
 
     def select(self, timeout):

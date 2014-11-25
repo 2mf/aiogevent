@@ -59,8 +59,6 @@ class TcpServer(threading.Thread):
 
 class NetworkTests(tests.TestCase):
     def test_tcp_hello(self):
-        raise tests.unittest.SkipTest("FIXME: test hangs")
-
         port = 8888
         host = '127.0.0.1'
         message = b'Hello World!'
