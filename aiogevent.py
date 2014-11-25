@@ -5,6 +5,7 @@ import greenlet
 import logging
 import socket
 import sys
+import threading
 
 try:
     import asyncio
@@ -294,6 +295,9 @@ class EventLoopPolicy(asyncio.AbstractEventLoopPolicy):
         self._loop = None
 
     def get_event_loop(self):
+        if not isinstance(threading.current_thread(), threading._MainThread):
+            raise RuntimeError("aiogevent event loop must run in "
+                               "the main thread")
         if self._loop is None:
             self._loop = self.new_event_loop()
         return self._loop
