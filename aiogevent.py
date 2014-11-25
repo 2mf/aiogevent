@@ -9,8 +9,6 @@ import sys
 import socket
 import threading
 
-logger = logging.getLogger('aiogreen')
-
 try:
     import asyncio
 
@@ -25,6 +23,9 @@ except ImportError:
         from trollius.windows_utils import socketpair
     else:
         socketpair = socket.socketpair
+
+logger = logging.getLogger('aiogreen')
+_PY3 = sys.version_info >= (3,)
 
 # FIXME: gevent monkey patching
 if False:
@@ -238,12 +239,20 @@ class EventLoop(asyncio.SelectorEventLoop):
             raise TypeError("greenthread or greenlet request, not %s"
                             % type(gt))
 
-        if gt:
-            raise RuntimeError("wrap_greenthread: the greenthread is running")
         if gt.dead:
             raise RuntimeError("wrap_greenthread: the greenthread already finished")
 
         if isinstance(gt, gevent.Greenlet):
+            # Don't use gevent.Greenlet.__bool__() because since gevent 1.0, a
+            # greenlet is True if it already starts, and gevent.spawn() starts
+            # the greenlet just after its creation.
+            if _PY3:
+                is_running = greenlet.greenlet.__bool__
+            else:
+                is_running = greenlet.greenlet.__nonzero__
+            if is_running(gt):
+                raise RuntimeError("wrap_greenthread: the greenthread is running")
+
             orig_func = gt._run
             def wrap_func(*args, **kw):
                 try:
@@ -254,6 +263,9 @@ class EventLoop(asyncio.SelectorEventLoop):
                     fut.set_result(result)
             gt._run = wrap_func
         else:
+            if gt:
+                raise RuntimeError("wrap_greenthread: the greenthread is running")
+
             try:
                 orig_func = gt.run
             except AttributeError:
