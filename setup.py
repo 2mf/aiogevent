@@ -6,7 +6,7 @@
 #       \Python27\python.exe runtest.py -r
 #       \Python27\python.exe runtest.py -r -m
 #
-#  - update the version in setup.py and doc/conf.py to X.Y
+#  - update the version in setup.py to X.Y
 #  - set release date in doc/changelog.rst
 #  - check that "python setup.py sdist" contains all files tracked by
 #    the SCM (Mercurial): update MANIFEST.in if needed
@@ -14,7 +14,7 @@
 #  - hg tag X.Y
 #  - hg push
 #  - python setup.py sdist bdist_wheel register upload
-#  - increment version in setup.py and doc/conf.py
+#  - increment version in setup.py
 #  - hg ci && hg push
 
 import os
@@ -43,23 +43,23 @@ with open("README") as fp:
     long_description = fp.read()
 
 install_options = {
-    "name": "aiogreen",
-    "version": "0.4",
+    "name": "aiogevent",
+    "version": "0.1",
     "license": "Apache License 2.0",
     "author": 'Victor Stinner',
     "author_email": 'victor.stinner@gmail.com',
 
-    "description": "asyncio event loop scheduling callbacks in gevent.",
+    "description": "asyncio API (PEP 3156) implemented on top of gevent",
     "long_description": long_description,
     "url": "https://pypi.python.org/pypi/aiogevent",
 
     "classifiers": [
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3",
+        #"Programming Language :: Python :: 3",
         "License :: OSI Approved :: Apache Software License",
     ],
 
-    "py_modules": ["aiogreen"],
+    "py_modules": ["aiogevent"],
     #"test_suite": "runtests.runtests",
 }
 if SETUPTOOLS:
