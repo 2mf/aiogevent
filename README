@@ -154,6 +154,48 @@ wrap_greenlet(gt):
         1 + 2 = 3
 
 
+Installation
+============
+
+Install aiogevent with pip
+-------------------------
+
+Type::
+
+    pip install aiogevent
+
+Install aiogevent on Windows with pip
+------------------------------------
+
+Procedure for Python 2.7:
+
+* If pip is not installed yet, `install pip
+  <http://www.pip-installer.org/en/latest/installing.html>`_: download
+  ``get-pip.py`` and type::
+
+  \Python27\python.exe get-pip.py
+
+* Install aiogevent with pip::
+
+  \Python27\python.exe -m pip install aiogevent
+
+* pip also installs dependencies: ``eventlet`` and ``trollius``
+
+Manual installation of aiogevent
+-------------------------------
+
+Requirements:
+
+- Python 2.6 or 2.7
+- gevent 0.13 or newer
+- trollius 0.3 or newer (``pip install trollius``), but trollius 1.0 or newer
+  is recommended
+
+Type::
+
+    python setup.py install
+
+
 To do
 =====
 
