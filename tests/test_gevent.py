@@ -313,6 +313,12 @@ class WrapGreenletTests(tests.TestCase):
         self.addCleanup(coro_obj.close)
         self.assertRaises(TypeError, aiogevent.wrap_greenlet, coro_obj)
 
+    def test_wrap_greenlet_no_run_attr(self):
+        gl = gevent.spawn()
+        msg = "wrap_greenlet: the _run attribute of the greenlet is not set"
+        self.assertRaisesRegexp(RuntimeError, msg,
+                                aiogevent.wrap_greenlet, gl)
+
 
 class WrapGreenletRawTests(tests.TestCase):
     def test_wrap_greenlet(self):

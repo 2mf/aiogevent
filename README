@@ -112,7 +112,8 @@ wrap_greenlet
    The greenlet must be wrapped before its execution starts. If the
    greenlet is running or already finished, an exception is raised.
 
-   The ``run`` attribute of the greenlet must be set.
+   For ``gevent.Greenlet``, the ``_run`` attribute must be set. For
+   ``greenlet.greenlet``, the ``run`` attribute must be set.
 
    Example of trollius coroutine waiting for a greenlet. The ``progress()``
    callback is called regulary to see that the event loop in not blocked::

@@ -230,7 +230,8 @@ def wrap_greenlet(gt, loop=None):
     The greenlet must be wrapped before its execution starts. If the greenlet
     is running or already finished, an exception is raised.
 
-    The run attribute of the greenlet must be set.
+    For gevent.Greenlet, the _run attribute must be set. For greenlet.greenlet,
+    the run attribute must be set.
     """
     fut = asyncio.Future(loop=loop)
 
@@ -252,7 +253,11 @@ def wrap_greenlet(gt, loop=None):
         if is_running(gt):
             raise RuntimeError("wrap_greenlet: the greenlet is running")
 
-        orig_func = gt._run
+        try:
+            orig_func = gt._run
+        except AttributeError:
+            raise RuntimeError("wrap_greenlet: the _run attribute "
+                               "of the greenlet is not set")
         def wrap_func(*args, **kw):
             try:
                 result = orig_func(*args, **kw)
