@@ -5,12 +5,24 @@ aiogevent allows to use greenlets in asyncio coroutines, and to use asyncio
 coroutines, tasks and futures in greenlets: see ``link_future()`` and
 ``wrap_greenthread()`` functions.
 
-The main visible difference between aiogreen and trollius is the behaviour of
+The main visible difference between aiogevent and trollius is the behaviour of
 ``run_forever()``: ``run_forever()`` blocks with trollius, whereas it runs in a
-greenlet with aiogreen. It means that aiogreen event loop can run in an
+greenlet with aiogevent. It means that aiogevent event loop can run in an
 greenlet while the Python main thread runs other greenlets in parallel.
 
 * `aiogevent project <https://pypi.python.org/pypi/aiogevent>`_
 * Copyright/license: Open source, Apache 2.0. Enjoy!
 
 See also the `aiogreen project <http://aiogreen.readthedocs.org/>`_.
+
+TODO:
+
+* support gevent versions older than 0.13
+* support gevent monkey patching
+* enable py33 environments in tox.ini: gevent 1.0.1 does not support Python 3,
+  need a new release. Tests pass on the development (git) version of gevent.
+
+The development version of gevent has an experimental support of Python 3.
+See the `gevent issue #38: python3
+<https://github.com/gevent/gevent/issues/38>`_.
+

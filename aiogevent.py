@@ -173,7 +173,6 @@ class _Selector(asyncio.selectors._BaseSelectorImpl):
             self._event = None
 
 
-# FIXME: support gevent 1.0
 class EventLoop(asyncio.SelectorEventLoop):
     def __init__(self):
         self._greenlet = None
