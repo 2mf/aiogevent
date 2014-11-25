@@ -4,10 +4,8 @@ import gevent.hub
 import greenlet
 import logging
 import signal
-import sys
-# FIXME: gevent monkey patching
 import socket
-import threading
+import sys
 
 try:
     import asyncio
@@ -26,29 +24,6 @@ except ImportError:
 
 logger = logging.getLogger('aiogreen')
 _PY3 = sys.version_info >= (3,)
-
-# FIXME: gevent monkey patching
-if False:
-    # trollius must use call original socket and threading functions.
-    # Examples: socket.socket(), socket.socketpair(),
-    # threading.current_thread().
-    asyncio.base_events.socket = socket
-    asyncio.events.threading = threading
-    if sys.platform == 'win32':
-        asyncio.windows_events.socket = socket
-        asyncio.windows_utils.socket = socket
-    else:
-        asyncio.unix_events.socket = socket
-        asyncio.unix_events.threading = threading
-    # FIXME: patch also trollius.py3_ssl
-
-    # BaseDefaultEventLoopPolicy._Local must inherit from threading.local
-    # of the original threading module, not the patched threading module
-    class _Local(threading.local):
-        _loop = None
-        _set_called = False
-
-    asyncio.events.BaseDefaultEventLoopPolicy._Local = _Local
 
 _EVENT_READ = asyncio.selectors.EVENT_READ
 _EVENT_WRITE = asyncio.selectors.EVENT_WRITE
@@ -288,5 +263,20 @@ class EventLoop(asyncio.SelectorEventLoop):
             self._greenlet = None
 
 
-class EventLoopPolicy(asyncio.DefaultEventLoopPolicy):
+class EventLoopPolicy(asyncio.AbstractEventLoopPolicy):
     _loop_factory = EventLoop
+
+    def __init__(self):
+        # gevent does not support threads, an attribute is enough
+        self._loop = None
+
+    def get_event_loop(self):
+        if self._loop is None:
+            self._loop = self.new_event_loop()
+        return self._loop
+
+    def set_event_loop(self, loop):
+        self._loop = loop
+
+    def new_event_loop(self):
+        return self._loop_factory()

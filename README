@@ -27,3 +27,6 @@ The development version of gevent has an experimental support of Python 3.
 See the `gevent issue #38: python3
 <https://github.com/gevent/gevent/issues/38>`_.
 
+gevent does not support threads: the aiogevent must run in the main thread,
+and run_in_executor() is not implemented.
+
