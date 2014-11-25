@@ -224,7 +224,7 @@ gevent does not support threads: the aiogevent must run in the main thread.
 Changelog
 =========
 
-Version 0.1
------------
+2014-11-25: Version 0.1
+-----------------------
 
 * First public release

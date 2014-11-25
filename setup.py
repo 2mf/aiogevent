@@ -4,10 +4,9 @@
 #  - run unit tests on Windows, run::
 #
 #       \Python27\python.exe runtest.py -r
-#       \Python27\python.exe runtest.py -r -m
 #
 #  - update the version in setup.py to X.Y
-#  - set release date in doc/changelog.rst
+#  - set release date in README
 #  - check that "python setup.py sdist" contains all files tracked by
 #    the SCM (Mercurial): update MANIFEST.in if needed
 #  - hg ci
