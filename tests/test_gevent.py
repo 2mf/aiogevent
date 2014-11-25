@@ -110,45 +110,46 @@ def greenlet_link_future(result, loop):
         loop.stop()
 
 
+def ignore_stderr():
+    return tests.mock.patch.object(sys, 'stderr')
+
+
 class GeventTests(tests.TestCase):
-    def test_hello_world(self):
+    def test_stop(self):
+        def func():
+            self.loop.stop()
+
+        gevent.spawn(func)
+        self.loop.run_forever()
+
+    def test_soon(self):
         result = []
 
-        def hello_world(loop):
-            result.append('Hello World')
-            loop.stop()
+        def func():
+            result.append("spawn")
+            self.loop.stop()
 
-        self.loop.call_soon(hello_world, self.loop)
+        gevent.spawn(func)
         self.loop.run_forever()
-        self.assertEqual(result, ['Hello World'])
+        self.assertEqual(result, ["spawn"])
 
+    def test_soon_spawn(self):
+        result = []
 
-class WrapGreenletTests(tests.TestCase):
-    def test_wrap_greenlet(self):
-        def func():
-            gevent.sleep(0.010)
-            return 'ok'
+        def func1():
+            result.append("spawn")
 
-        gt = gevent.spawn(func)
-        fut = aiogevent.wrap_greenlet(gt)
-        result = self.loop.run_until_complete(fut)
-        self.assertEqual(result, 'ok')
+        def func2():
+            result.append("spawn_later")
+            self.loop.stop()
 
-    def test_coro_wrap_greenlet(self):
-        result = self.loop.run_until_complete(coro_wrap_greenlet())
-        self.assertEqual(result, [1, 10, 2, 20, 'error', 4])
+        def schedule_greenlet():
+            gevent.spawn(func1)
+            gevent.spawn_later(0.010, func2)
 
-    def test_wrap_invalid_type(self):
-        def func():
-            pass
-        self.assertRaises(TypeError, aiogevent.wrap_greenlet, func)
-
-        @asyncio.coroutine
-        def coro_func():
-            pass
-        coro_obj = coro_func()
-        self.addCleanup(coro_obj.close)
-        self.assertRaises(TypeError, aiogevent.wrap_greenlet, coro_obj)
+        self.loop.call_soon(schedule_greenlet)
+        self.loop.run_forever()
+        self.assertEqual(result, ["spawn", "spawn_later"])
 
 
 class LinkFutureTests(tests.TestCase):
@@ -196,7 +197,7 @@ class LinkFutureTests(tests.TestCase):
         def func(fut):
             try:
                 value = aiogevent.link_future(fut)
-            except Exception as exc:
+            except Exception:
                 result.append('error')
             else:
                 result.append(value)
@@ -222,7 +223,7 @@ class LinkFutureTests(tests.TestCase):
         for obj in (coro_func, regular_func):
             gt = gevent.spawn(func, coro_func)
             # ignore logged traceback
-            with tests.mock.patch.object(sys, 'stderr') as stderr:
+            with ignore_stderr():
                 self.assertRaises(TypeError, gt.get)
 
     def test_link_future_wrong_loop(self):
@@ -247,7 +248,127 @@ class LinkFutureTests(tests.TestCase):
                          'loop argument must agree with Future')
 
 
+class WrapGreenletTests(tests.TestCase):
+    def test_wrap_greenlet(self):
+        def func():
+            gevent.sleep(0.010)
+            return 'ok'
+
+        gt = gevent.spawn(func)
+        fut = aiogevent.wrap_greenlet(gt)
+        result = self.loop.run_until_complete(fut)
+        self.assertEqual(result, 'ok')
+
+    def test_wrap_greenlet_exc(self):
+        self.loop.set_debug(True)
+
+        def func():
+            raise ValueError(7)
+
+        # FIXME: the unit test must fail!?
+        with tests.mock.patch('traceback.print_exception') as print_exception:
+            gt = gevent.spawn(func)
+            fut = aiogevent.wrap_greenlet(gt)
+            self.assertRaises(ValueError, self.loop.run_until_complete, fut)
+
+        # the exception must not be logger by traceback: the caller must
+        # consume the exception from the future object
+        self.assertFalse(print_exception.called)
+
+    def test_wrap_greenlet_running(self):
+        def func():
+            return aiogevent.wrap_greenlet(gt)
+
+        self.loop.set_debug(False)
+        gt = gevent.spawn(func)
+        msg = "wrap_greenlet: the greenlet is running"
+        with ignore_stderr():
+            self.assertRaisesRegexp(RuntimeError, msg, gt.get)
+
+    def test_wrap_greenlet_dead(self):
+        def func():
+            return 'ok'
+
+        gt = gevent.spawn(func)
+        result = gt.get()
+        self.assertEqual(result, 'ok')
+
+        msg = "wrap_greenlet: the greenlet already finished"
+        self.assertRaisesRegexp(RuntimeError, msg,
+                                aiogevent.wrap_greenlet, gt)
+
+    def test_coro_wrap_greenlet(self):
+        result = self.loop.run_until_complete(coro_wrap_greenlet())
+        self.assertEqual(result, [1, 10, 2, 20, 'error', 4])
+
+    def test_wrap_invalid_type(self):
+        def func():
+            pass
+        self.assertRaises(TypeError, aiogevent.wrap_greenlet, func)
+
+        @asyncio.coroutine
+        def coro_func():
+            pass
+        coro_obj = coro_func()
+        self.addCleanup(coro_obj.close)
+        self.assertRaises(TypeError, aiogevent.wrap_greenlet, coro_obj)
+
+
+class WrapGreenletRawTests(tests.TestCase):
+    def test_wrap_greenlet(self):
+        def func():
+            gevent.sleep(0.010)
+            return "ok"
+
+        gt = gevent.spawn_raw(func)
+        fut = aiogevent.wrap_greenlet(gt)
+        result = self.loop.run_until_complete(fut)
+        self.assertEqual(result, "ok")
+
+    def test_wrap_greenlet_exc(self):
+        self.loop.set_debug(True)
+
+        def func():
+            raise ValueError(7)
+
+        gt = gevent.spawn_raw(func)
+        fut = aiogevent.wrap_greenlet(gt)
+        self.assertRaises(ValueError, self.loop.run_until_complete, fut)
+
+    def test_wrap_greenlet_running(self):
+        event = gevent.event.Event()
+        result = []
+
+        def func():
+            try:
+                gt = gevent.getcurrent()
+                fut = aiogevent.wrap_greenlet(gt)
+            except Exception as exc:
+                result.append((True, exc))
+            else:
+                result.append((False, fut))
+            event.set()
+
+        gevent.spawn_raw(func)
+        event.wait()
+        error, value = result[0]
+        self.assertTrue(error)
+        self.assertIsInstance(value, RuntimeError)
+        self.assertEqual(str(value),
+                         "wrap_greenlet: the greenlet is running")
+
+    def test_wrap_greenlet_dead(self):
+        event = gevent.event.Event()
+        def func():
+            event.set()
+
+        gt = gevent.spawn_raw(func)
+        event.wait()
+        msg = "wrap_greenlet: the greenlet already finished"
+        self.assertRaisesRegexp(RuntimeError, msg,
+                                aiogevent.wrap_greenlet, gt)
+
+
 if __name__ == '__main__':
     import unittest
     unittest.main()
-
