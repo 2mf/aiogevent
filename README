@@ -47,7 +47,7 @@ aiogevent specific functions:
 link_future
 -----------
 
-.. function:: link_future(future, loop=None)
+link_future(future, loop=None):
 
    Wait for a future, a task, or a coroutine object from a greenlet.
 
@@ -99,7 +99,7 @@ link_future
 wrap_greenlet
 -------------
 
-.. function:: wrap_greenlet(gt)
+wrap_greenlet(gt):
 
    Wrap a greenlet into a Future object.
 
