@@ -3,7 +3,6 @@ import gevent.event
 import gevent.hub
 import greenlet
 import logging
-import signal
 import socket
 import sys
 
@@ -66,10 +65,6 @@ class _Selector(asyncio.selectors._BaseSelectorImpl):
 
     def _notify_write(self, event, x):
         self._notify(event.fd, _EVENT_WRITE)
-
-    def _throwback(self, fd):
-        # FIXME: do something with the FD in this case?
-        pass
 
     def _read_events(self):
         notified = self._notified
