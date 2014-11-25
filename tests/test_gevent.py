@@ -319,6 +319,10 @@ class WrapGreenletTests(tests.TestCase):
         self.assertRaisesRegexp(RuntimeError, msg,
                                 aiogevent.wrap_greenlet, gl)
 
+        # execute the greenlet to consume the error
+        with ignore_stderr():
+            self.assertRaises(AttributeError, gl.get)
+
 
 class WrapGreenletRawTests(tests.TestCase):
     def test_wrap_greenlet(self):

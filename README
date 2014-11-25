@@ -157,10 +157,9 @@ wrap_greenlet(gt):
 To do
 =====
 
-* test link_future()
-* support gevent versions older than 0.13. With version older than 0.13, import gevent
-  raise "ImportError: .../python2.7/site-packages/gevent/core.so: undefined
-  symbol: current_base"
+* support gevent versions older than 0.13. With version older than 0.13, import
+  gevent raise "ImportError: .../python2.7/site-packages/gevent/core.so:
+  undefined symbol: current_base"
 * support gevent monkey patching
 * enable py33 environments in tox.ini: gevent 1.0.1 does not support Python 3,
   need a new release. Tests pass on the development (git) version of gevent.
