@@ -202,7 +202,7 @@ To do
 * support gevent versions older than 0.13. With version older than 0.13, import
   gevent raise "ImportError: .../python2.7/site-packages/gevent/core.so:
   undefined symbol: current_base"
-* support gevent monkey patching
+* support gevent monkey patching: enable py27_patch in tox.ini
 * enable py33 environments in tox.ini: gevent 1.0.1 does not support Python 3,
   need a new release. Tests pass on the development (git) version of gevent.
 
@@ -223,6 +223,12 @@ gevent does not support threads: the aiogevent must run in the main thread.
 
 Changelog
 =========
+
+Version 0.2
+-----------
+
+* Add run_aiotest.py
+* tox now also runs aiotest test suite
 
 2014-11-25: Version 0.1
 -----------------------
