@@ -32,16 +32,6 @@ class CallbackTests(tests.TestCase):
         self.loop.run_forever()
         self.assertEqual(result, ["Hello", "World"])
 
-    def test_close_soon(self):
-        def func():
-            pass
-
-        self.loop.close()
-        # FIXME: calling call_soon() on a closed event loop should raise an
-        # exception:
-        # http://bugs.python.org/issue22922
-        self.loop.call_soon(func)
-
 
 if __name__ == '__main__':
     import unittest
