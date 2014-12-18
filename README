@@ -221,7 +221,8 @@ See the `gevent issue #38: python3
 Threading
 =========
 
-gevent does not support threads: the aiogevent must run in the main thread.
+gevent does not support threads: the aiogevent event loop must run in the main
+thread.
 
 
 Changelog
