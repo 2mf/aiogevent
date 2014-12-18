@@ -42,7 +42,7 @@ with open("README") as fp:
 
 install_options = {
     "name": "aiogevent",
-    "version": "0.2",
+    "version": "0.3",
     "license": "Apache License 2.0",
     "author": 'Victor Stinner',
     "author_email": 'victor.stinner@gmail.com',
