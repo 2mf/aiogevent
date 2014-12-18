@@ -89,16 +89,16 @@ except ImportError:
         raise ValueError("error")
 
 
-def greenlet_link_future(result, loop):
+def greenlet_yield_future(result, loop):
     try:
-        value = aiogevent.link_future(coro_slow_append(result, 1, 0.020))
+        value = aiogevent.yield_future(coro_slow_append(result, 1, 0.020))
         result.append(value)
 
-        value = aiogevent.link_future(coro_slow_append(result, 2, 0.010))
+        value = aiogevent.yield_future(coro_slow_append(result, 2, 0.010))
         result.append(value)
 
         try:
-            value = aiogevent.link_future(coro_slow_error())
+            value = aiogevent.yield_future(coro_slow_error())
         except ValueError as exc:
             result.append(str(exc))
 
@@ -153,10 +153,10 @@ class GeventTests(tests.TestCase):
 
 
 class LinkFutureTests(tests.TestCase):
-    def test_greenlet_link_future(self):
+    def test_greenlet_yield_future(self):
         result = []
         self.loop.call_soon(gevent.spawn,
-                            greenlet_link_future, result, self.loop)
+                            greenlet_yield_future, result, self.loop)
         self.loop.run_forever()
         self.assertEqual(result, [1, 10, 2, 20, 'error', 4])
 
@@ -164,7 +164,7 @@ class LinkFutureTests(tests.TestCase):
         result = []
 
         def func(fut):
-            value = aiogevent.link_future(coro_slow_append(result, 3))
+            value = aiogevent.yield_future(coro_slow_append(result, 3))
             result.append(value)
             self.loop.stop()
 
@@ -173,12 +173,12 @@ class LinkFutureTests(tests.TestCase):
         self.loop.run_forever()
         self.assertEqual(result, [3, 30])
 
-    def test_link_future_not_running(self):
+    def test_yield_future_not_running(self):
         result = []
 
         def func(event, fut):
             event.set()
-            value = aiogevent.link_future(fut)
+            value = aiogevent.yield_future(fut)
             result.append(value)
             self.loop.stop()
 
@@ -191,12 +191,12 @@ class LinkFutureTests(tests.TestCase):
         self.loop.run_forever()
         self.assertEqual(result, [21])
 
-    def test_link_future_from_loop(self):
+    def test_yield_future_from_loop(self):
         result = []
 
         def func(fut):
             try:
-                value = aiogevent.link_future(fut)
+                value = aiogevent.yield_future(fut)
             except Exception:
                 result.append('error')
             else:
@@ -209,9 +209,9 @@ class LinkFutureTests(tests.TestCase):
         self.loop.run_forever()
         self.assertEqual(result, ['error'])
 
-    def test_link_future_invalid_type(self):
+    def test_yield_future_invalid_type(self):
         def func(obj):
-            return aiogevent.link_future(obj)
+            return aiogevent.yield_future(obj)
 
         @asyncio.coroutine
         def coro_func():
@@ -226,14 +226,14 @@ class LinkFutureTests(tests.TestCase):
             with ignore_stderr():
                 self.assertRaises(TypeError, gt.get)
 
-    def test_link_future_wrong_loop(self):
+    def test_yield_future_wrong_loop(self):
         result = []
         loop2 = asyncio.new_event_loop()
         self.addCleanup(loop2.close)
 
         def func(fut):
             try:
-                value = aiogevent.link_future(fut, loop=loop2)
+                value = aiogevent.yield_future(fut, loop=loop2)
             except Exception as exc:
                 result.append(str(exc))
             else:

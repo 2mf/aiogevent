@@ -42,7 +42,6 @@ class _Selector(asyncio.selectors._BaseSelectorImpl):
         if _GEVENT10:
             self._gevent_loop = gevent.hub.get_hub().loop
 
-
     def close(self):
         keys = list(self.get_map().values())
         for key in keys:
@@ -194,17 +193,20 @@ class EventLoop(asyncio.SelectorEventLoop):
             self._greenlet = None
 
 
-def link_future(future, loop=None):
+def yield_future(future, loop=None):
     """Wait for a future, a task, or a coroutine object from a greenlet.
+
+    Yield control other eligible greenlet until the future is done (finished
+    successfully or failed with an exception).
 
     Return the result or raise the exception of the future.
 
-    The function must not be called from the greenlet
-    of the aiogreen event loop.
+    The function must not be called from the greenlet running the aiogreen
+    event loop.
     """
     future = asyncio.async(future, loop=loop)
     if future._loop._greenlet == gevent.getcurrent():
-        raise RuntimeError("link_future() must not be called from "
+        raise RuntimeError("yield_future() must not be called from "
                            "the greenlet of the aiogreen event loop")
 
     event = gevent.event.Event()

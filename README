@@ -2,7 +2,7 @@ aiogevent implements the asyncio API (PEP 3156) on top of gevent. It makes
 possible to write asyncio code in a project currently written for gevent.
 
 aiogevent allows to use greenlets in asyncio coroutines, and to use asyncio
-coroutines, tasks and futures in greenlets: see ``link_future()`` and
+coroutines, tasks and futures in greenlets: see ``yield_future()`` and
 ``wrap_greenlet()`` functions.
 
 The main visible difference between aiogevent and trollius is the behaviour of
@@ -47,17 +47,20 @@ aiogevent specific functions:
 .. warning::
    aiogevent API is not considered as stable yet.
 
-link_future
------------
+yield_future
+------------
 
-link_future(future, loop=None):
+yield_future(future, loop=None):
 
    Wait for a future, a task, or a coroutine object from a greenlet.
 
+   Yield control other eligible greenlet until the future is done (finished
+   successfully or failed with an exception).
+
    Return the result or raise the exception of the future.
 
-   The function must not be called from the greenlet of the aiogevent event
-   loop.
+   The function must not be called from the greenlet running the aiogreen
+   event loop.
 
    Example of greenlet waiting for a trollius task. The ``progress()``
    callback is called regulary to see that the event loop in not blocked::
@@ -81,7 +84,7 @@ link_future(future, loop=None):
 
             task = asyncio.async(coro_slow_sum(1, 2))
 
-            value = aiogevent.link_future(task)
+            value = aiogevent.yield_future(task)
             print("1 + 2 = %s" % value)
 
             loop.stop()
@@ -230,6 +233,7 @@ Changelog
 Version 0.2
 -----------
 
+* Rename the ``link_future()`` function to ``yield_future()``
 * Add run_aiotest.py
 * tox now also runs aiotest test suite
 
