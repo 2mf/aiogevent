@@ -10,10 +10,13 @@ The main visible difference between aiogevent and trollius is the behaviour of
 greenlet with aiogevent. It means that aiogevent event loop can run in an
 greenlet while the Python main thread runs other greenlets in parallel.
 
-* `aiogevent project <https://pypi.python.org/pypi/aiogevent>`_
+* `aiogevent on Python Cheeseshop (PyPI)
+  <https://pypi.python.org/pypi/aiogevent>`_
+* `aiogevent at Bitbucket
+  <https://bitbucket.org/haypo/aiogevent>`_
 * Copyright/license: Open source, Apache 2.0. Enjoy!
 
-See also the `aiogreen project <http://aiogreen.readthedocs.org/>`_.
+See also the `aioeventlet project <http://aioeventlet.readthedocs.org/>`_.
 
 
 Hello World
@@ -158,14 +161,14 @@ Installation
 ============
 
 Install aiogevent with pip
--------------------------
+--------------------------
 
 Type::
 
     pip install aiogevent
 
 Install aiogevent on Windows with pip
-------------------------------------
+-------------------------------------
 
 Procedure for Python 2.7:
 
@@ -182,7 +185,7 @@ Procedure for Python 2.7:
 * pip also installs dependencies: ``eventlet`` and ``trollius``
 
 Manual installation of aiogevent
--------------------------------
+--------------------------------
 
 Requirements:
 
