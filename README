@@ -230,8 +230,8 @@ gevent does not support threads: the aiogevent must run in the main thread.
 Changelog
 =========
 
-Version 0.2
------------
+2014-12-18: Version 0.2
+-----------------------
 
 * Rename the ``link_future()`` function to ``yield_future()``
 * Add run_aiotest.py

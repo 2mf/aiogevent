@@ -1,5 +1,6 @@
 include COPYING
 include Makefile
 include runtests.py
+include run_aiotest.py
 include tests/*.py
 include tox.ini

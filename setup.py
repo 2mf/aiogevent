@@ -3,7 +3,7 @@
 #  - run unit tests on Linux: run "tox"
 #  - run unit tests on Windows, run::
 #
-#       \Python27\python.exe runtest.py -r
+#       \Python27\python.exe runtests.py -r
 #
 #  - update the version in setup.py to X.Y
 #  - set release date in README
@@ -42,7 +42,7 @@ with open("README") as fp:
 
 install_options = {
     "name": "aiogevent",
-    "version": "0.1",
+    "version": "0.2",
     "license": "Apache License 2.0",
     "author": 'Victor Stinner',
     "author_email": 'victor.stinner@gmail.com',
