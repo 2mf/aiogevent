@@ -44,9 +44,6 @@ API
 
 aiogevent specific functions:
 
-.. warning::
-   aiogevent API is not considered as stable yet.
-
 yield_future
 ------------
 
@@ -113,7 +110,7 @@ wrap_greenlet(gt):
    the exception of the greenlet will be stored in the Future object.
 
    Greenlet of greenlet and gevent modules are supported: ``gevent.greenlet``
-   and ``greenlet.greenlet``.
+   and ``greenlet.greenlet`` objects.
 
    The greenlet must be wrapped before its execution starts. If the
    greenlet is running or already finished, an exception is raised.
