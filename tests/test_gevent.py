@@ -283,7 +283,7 @@ class WrapGreenletTests(tests.TestCase):
         gt = gevent.spawn(func)
         msg = "wrap_greenlet: the greenlet is running"
         with ignore_stderr():
-            self.assertRaisesRegexp(RuntimeError, msg, gt.get)
+            self.assertRaisesRegex(RuntimeError, msg, gt.get)
 
     def test_wrap_greenlet_dead(self):
         def func():
@@ -294,8 +294,8 @@ class WrapGreenletTests(tests.TestCase):
         self.assertEqual(result, 'ok')
 
         msg = "wrap_greenlet: the greenlet already finished"
-        self.assertRaisesRegexp(RuntimeError, msg,
-                                aiogevent.wrap_greenlet, gt)
+        self.assertRaisesRegex(RuntimeError, msg,
+                               aiogevent.wrap_greenlet, gt)
 
     def test_coro_wrap_greenlet(self):
         result = self.loop.run_until_complete(coro_wrap_greenlet())
@@ -316,8 +316,8 @@ class WrapGreenletTests(tests.TestCase):
     def test_wrap_greenlet_no_run_attr(self):
         gl = gevent.spawn()
         msg = "wrap_greenlet: the _run attribute of the greenlet is not set"
-        self.assertRaisesRegexp(RuntimeError, msg,
-                                aiogevent.wrap_greenlet, gl)
+        self.assertRaisesRegex(RuntimeError, msg,
+                               aiogevent.wrap_greenlet, gl)
 
         # execute the greenlet to consume the error
         with ignore_stderr():
@@ -375,8 +375,8 @@ class WrapGreenletRawTests(tests.TestCase):
         gt = gevent.spawn_raw(func)
         event.wait()
         msg = "wrap_greenlet: the greenlet already finished"
-        self.assertRaisesRegexp(RuntimeError, msg,
-                                aiogevent.wrap_greenlet, gt)
+        self.assertRaisesRegex(RuntimeError, msg,
+                               aiogevent.wrap_greenlet, gt)
 
 
 if __name__ == '__main__':
