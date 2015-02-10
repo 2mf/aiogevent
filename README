@@ -14,6 +14,7 @@ greenlet while the Python main thread runs other greenlets in parallel.
   <https://pypi.python.org/pypi/aiogevent>`_
 * `aiogevent at Bitbucket
   <https://bitbucket.org/haypo/aiogevent>`_
+* `gevent <http://www.gevent.org/>`_
 * Copyright/license: Open source, Apache 2.0. Enjoy!
 
 See also the `aioeventlet project <http://aioeventlet.readthedocs.org/>`_.
