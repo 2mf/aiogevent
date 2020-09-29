@@ -23,14 +23,21 @@ except ImportError:
 
 _PY3 = sys.version_info >= (3,)
 
-_EVENT_READ = asyncio.selectors.EVENT_READ
-_EVENT_WRITE = asyncio.selectors.EVENT_WRITE
+try:
+    _EVENT_READ = asyncio.selectors.EVENT_READ
+    _EVENT_WRITE = asyncio.selectors.EVENT_WRITE
+    _BaseSelectorImpl = asyncio.selectors._BaseSelectorImpl
+except AttributeError:
+    import selectors
+    _EVENT_READ = selectors.EVENT_READ
+    _EVENT_WRITE = selectors.EVENT_WRITE
+    _BaseSelectorImpl = selectors._BaseSelectorImpl
 
 # gevent 1.0 or newer?
 _GEVENT10 = hasattr(gevent.hub.get_hub(), 'loop')
 
 
-class _Selector(asyncio.selectors._BaseSelectorImpl):
+class _Selector(_BaseSelectorImpl):
     def __init__(self, loop):
         super(_Selector, self).__init__()
         # fd => events
@@ -169,16 +176,16 @@ class EventLoop(asyncio.SelectorEventLoop):
         def time(self):
             return gevent.core.time()
 
-    def call_soon(self, callback, *args):
-        handle = super(EventLoop, self).call_soon(callback, *args)
+    def call_soon(self, callback, *args, **kwargs):
+        handle = super(EventLoop, self).call_soon(callback, *args, **kwargs)
         if self._selector is not None and self._selector._event:
             # selector.select() is running: write into the self-pipe to wake up
             # the selector
             self._write_to_self()
         return handle
 
-    def call_at(self, when, callback, *args):
-        handle = super(EventLoop, self).call_at(when, callback, *args)
+    def call_at(self, when, callback, *args, **kwargs):
+        handle = super(EventLoop, self).call_at(when, callback, *args, **kwargs)
         if self._selector is not None and self._selector._event:
             # selector.select() is running: write into the self-pipe to wake up
             # the selector
@@ -204,7 +211,11 @@ def yield_future(future, loop=None):
     The function must not be called from the greenlet running the aiogreen
     event loop.
     """
-    future = asyncio.async(future, loop=loop)
+    if hasattr(asyncio, "ensure_future"):
+        ensure_future = asyncio.ensure_future
+    else:  # use of async keyword has been Deprecated since Python 3.4.4
+        ensure_future =  getattr(asyncio, "async")
+    future = ensure_future(future, loop=loop)
     if future._loop._greenlet == gevent.getcurrent():
         raise RuntimeError("yield_future() must not be called from "
                            "the greenlet of the aiogreen event loop")
