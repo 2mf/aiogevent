@@ -149,15 +149,8 @@ class _Selector(_BaseSelectorImpl):
         self._event = gevent.event.Event()
         try:
             if timeout is not None:
-                def timeout_cb(event):
-                    if event.ready():
-                        return
-                    event.set()
-
-                gevent.spawn_later(timeout, timeout_cb, self._event)
-
-                self._event.wait()
-                # FIXME: cancel the timeout_cb if wait() returns 'ready'?
+                if not self._event.wait(timeout):
+                    self._event.set()
             else:
                 # blocking call
                 self._event.wait()
