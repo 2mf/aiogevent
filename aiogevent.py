@@ -266,7 +266,7 @@ def wrap_greenlet(gt, loop=None):
         def wrap_func(*args, **kw):
             try:
                 result = orig_func(*args, **kw)
-            except Exception as exc:
+            except BaseException as exc:
                 fut.set_exception(exc)
             else:
                 fut.set_result(result)
@@ -283,7 +283,7 @@ def wrap_greenlet(gt, loop=None):
         def wrap_func(*args, **kw):
             try:
                 result = orig_func(*args, **kw)
-            except Exception as exc:
+            except BaseException as exc:
                 fut.set_exception(exc)
             else:
                 fut.set_result(result)
