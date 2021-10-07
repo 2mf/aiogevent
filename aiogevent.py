@@ -9,7 +9,7 @@ import threading
 try:
     import asyncio
 
-    if sys.platform == 'win32':
+    if sys.platform == 'win32' and sys.version_info.minor <= 6:
         from asyncio.windows_utils import socketpair
     else:
         socketpair = socket.socketpair
